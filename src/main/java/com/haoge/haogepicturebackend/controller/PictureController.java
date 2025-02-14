@@ -1,11 +1,13 @@
 package com.haoge.haogepicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.haoge.haogepicturebackend.annotation.AuthCheck;
 import com.haoge.haogepicturebackend.common.BaseResponse;
 import com.haoge.haogepicturebackend.common.DeleteRequest;
 import com.haoge.haogepicturebackend.common.ResultUtils;
+import com.haoge.haogepicturebackend.constant.RedisConstant;
 import com.haoge.haogepicturebackend.constant.UserConstant;
 import com.haoge.haogepicturebackend.exception.BusinessException;
 import com.haoge.haogepicturebackend.exception.ErrorCode;
@@ -20,6 +22,8 @@ import com.haoge.haogepicturebackend.service.PictureService;
 import com.haoge.haogepicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -39,6 +44,9 @@ public class PictureController {
 
     @Resource
     private PictureService pictureService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 上传图片（可重新上传）
@@ -179,6 +187,34 @@ public class PictureController {
         // 查询数据库
         Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
                 pictureService.getQueryWrapper(pictureQueryRequest));
+        // 获取封装类
+        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+    }
+
+    /**
+     * 分页获取图片列表（封装类）
+     */
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                             HttpServletRequest request) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20 , ErrorCode.PARAMS_ERROR);
+        // 普通用户默认只能看到审核通过的数据
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        //查询缓存
+        String redisKey = RedisConstant.getRedisKey(pictureQueryRequest,"listPictureVOByPageWithCache");
+        String cacheData = redisTemplate.opsForValue().get(redisKey);
+        if (StringUtils.isNotBlank(cacheData)) {
+            Page<PictureVO> data = JSONUtil.toBean(cacheData, Page.class);
+            return ResultUtils.success(data);
+        }
+        // 查询数据库
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+        // 缓存到redis中
+        redisTemplate.opsForValue().set(redisKey, JSONUtil.toJsonStr(pictureService.getPictureVOPage(picturePage, request)),RedisConstant.getExpireTime(), TimeUnit.SECONDS);
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
     }
