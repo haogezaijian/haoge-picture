@@ -29,6 +29,11 @@ public class PictureUpdateRequest implements Serializable {
     private String category;
 
     /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
+
+    /**
      * 标签
      */
     private List<String> tags;
