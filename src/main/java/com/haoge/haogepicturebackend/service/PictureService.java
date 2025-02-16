@@ -87,4 +87,27 @@ public interface PictureService extends IService<Picture> {
      */
     void cleanPictureFile(Picture picture);
 
+    /**
+     * 校验权限
+     *
+     * @param loginUser the login user
+     * @param picture   the picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
+
+    /**
+     * 删除图片
+     *
+     * @param loginUser the login user
+     * @param id        the id
+     */
+    void deletePicture(User loginUser, Long id);
+
+    /**
+     * 编辑图片
+     *
+     * @param pictureEditRequest the picture edit request
+     * @param request            the request
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
 }

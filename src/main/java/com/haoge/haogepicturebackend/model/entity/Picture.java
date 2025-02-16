@@ -67,6 +67,11 @@ public class Picture implements Serializable {
     private String tags;
 
     /**
+     * 空间 id
+     */
+    private Long spaceId;
+
+    /**
      * 图片体积
      */
     private Long picSize;
