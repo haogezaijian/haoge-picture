@@ -10,12 +10,15 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.haoge.haogepicturebackend.exception.BusinessException;
 import com.haoge.haogepicturebackend.exception.ErrorCode;
 import com.haoge.haogepicturebackend.exception.ThrowUtils;
+import com.haoge.haogepicturebackend.manager.CosManager;
 import com.haoge.haogepicturebackend.manager.FileManager;
 import com.haoge.haogepicturebackend.manager.upload.FilePictureUpload;
 import com.haoge.haogepicturebackend.manager.upload.PictureUploadTemplate;
@@ -35,6 +38,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -52,6 +56,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private FileManager fileManager;
+
+    @Resource
+    private CosManager cosManager;
 
     @Resource
     private UserService userService;
@@ -348,6 +355,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+    @Override
+    @Async
+    public void cleanPictureFile(Picture picture) {
+        //判断是否被多条记录试用
+        String url = picture.getUrl();
+        long count = this.count(Wrappers.<Picture>lambdaQuery()
+                .eq(Picture::getUrl, url));
+
+        if (count > 1) {
+            return;
+        }
+        //删除原图
+        cosManager.deleteObject(url);
+        //删除缩略图
+        String thumbnailUrl = picture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
     }
 }
 
