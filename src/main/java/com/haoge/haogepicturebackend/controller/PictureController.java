@@ -4,6 +4,8 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.haoge.haogepicturebackend.annotation.AuthCheck;
+import com.haoge.haogepicturebackend.api.imagesearch.ImageSearchApiFacade;
+import com.haoge.haogepicturebackend.api.imagesearch.model.ImageSearchResult;
 import com.haoge.haogepicturebackend.common.BaseResponse;
 import com.haoge.haogepicturebackend.common.DeleteRequest;
 import com.haoge.haogepicturebackend.common.ResultUtils;
@@ -283,5 +285,24 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser);
         return ResultUtils.success(uploadCount);
+    }
+
+    /**
+     * 以图搜图
+     *
+     * @param searchPictureByPictureRequest the search picture by picture request
+     * @param request                       the request
+     * @return the base response
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest,
+                                                      HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId == null || pictureId < 0, ErrorCode.PARAMS_ERROR);
+        Picture picture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchPicture(picture.getUrl());
+        return ResultUtils.success(resultList);
     }
 }
