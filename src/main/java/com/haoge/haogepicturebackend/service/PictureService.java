@@ -10,6 +10,7 @@ import com.haoge.haogepicturebackend.model.vo.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author haoge
@@ -110,4 +111,26 @@ public interface PictureService extends IService<Picture> {
      * @param request            the request
      */
     void editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
+
+
+    /**
+     * 根据颜色搜索图片
+     *
+     * @param spaceId   the space id
+     * @param picColor  the pic color
+     * @param loginUser the login user
+     * @return the list
+     */
+    List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+
+    /**
+     * 批量更新
+     *
+     * @param pictureEditByBatchRequest pictureEditByBatchRequest
+     * @param loginUser                 登录的用户
+     */
+    void batchEditPictureMetadata(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+
 }
