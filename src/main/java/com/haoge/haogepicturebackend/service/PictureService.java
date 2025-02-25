@@ -2,6 +2,7 @@ package com.haoge.haogepicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.haoge.haogepicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.haoge.haogepicturebackend.model.dto.picture.*;
 import com.haoge.haogepicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -131,6 +132,16 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser                 登录的用户
      */
     void batchEditPictureMetadata(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+    /**
+     * AI 扩展图片服务
+     *
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser 登录的用户
+     * @return
+     */
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
+
 
 
 }
