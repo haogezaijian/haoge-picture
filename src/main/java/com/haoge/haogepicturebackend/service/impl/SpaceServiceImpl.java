@@ -201,6 +201,12 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         }
     }
 
+    @Override
+    public void checkSpaceAuth(Space space, User loginUser) {
+        if (!space.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有该空间权限");
+        }
+    }
 
 
 }
